@@ -13,148 +13,130 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import getopt
+import argparse
 import os
 import sys
 from subprocess import Popen, PIPE, STDOUT
 from BeautifulSoup import BeautifulSoup, Tag
 
-project_name        = ""
-project_source_dir  = ""
-author              = ""
-prefix              = "/usr/share" # could be ~/.local/share
-install_dir         = ""
-name                = ""
-keywords_content    = ""
-index_html          = ""
-devhelp_file        = ""
-keywords_content    = ""
-d_compiler          = "ldc2"
-d_files             = ()
-keywords            = []
 
-def basename( file_path , with_extention = False):
-    result = ""
-    if( with_extention ):
-        result = os.path.split(file_path)[1]
-    else:
-        result = os.path.split(file_path)[1].rsplit('.', 1)[0]
-    return result
+DEFAULTS = dict(project_name        = '',
+                project_source_dir  = '',
+                author              = '',
+                prefix              = '/usr/share', # could be ~/.local/share
+                install_dir         = '',
+                name                = '',
+                keywords_content    = '',
+                index_html          = '',
+                devhelp_file        = '',
+                d_compiler          = 'ldc2',
+                d_files             = ()
+               )
 
-def finder( directory = "/", extentions = [] ):
+class Container(object):
+    def __init__(self, **kwargs):
+        for k,v in kwargs.items():
+            setattr(self, k, v)
+
+
+def basename(file_path, with_extension=False):
+    r = os.path.split(file_path)[1]
+    return r if with_extension else r.rsplit('.', 1)[0]
+
+def finder( directory = '/', extentions = [] ):
     file_list  = []
-    for dirname, dirnames, filenames in os.walk( directory ):
+    for dirname, dirnames, filenames in os.walk(directory):
         for filename in filenames:
             f = os.path.join(dirname, filename)
-            if f.split('.')[-1] in extentions:
-                file_list.append( f )
-    return tuple( file_list )
+            if os.path.splitext(f)[1] in extentions:
+                file_list.append(f)
+    return file_list
 
-def usage():
-    print "Usage: DdocToDevhelp [ -a -c -p] -n <Project Name> -s <Source dir>"
-    print "-h --help                        Display this message"
-    print "-a --name=<author name>          Set author name"
-    print "-c --compiler=<compiler name>    Set compiler default: ldc2"
-    print "-n --name=<project name>         Set project name"
-    print "-s --source=<source dir>         Set source dir to scan"
-    print "-p --prefix=<prefix dir>         Set prefix path for to write devhelp book default: /usr/share"
 
-def main(argv):
-    global author
-    global d_compiler
-    global project_name
-    global project_source_dir
-    global prefix
-    try:
-        opts, args = getopt.getopt(argv, "ha:c:n:s:p:", ["help", "--author=", "--compiler=", "name=", "source=", "prefix="])
-    except getopt.GetoptError:
-        usage()
-        sys.exit(2)
-
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            usage()
-            sys.exit()
-        elif opt in ("-a", "--author="):
-            author = arg
-        elif opt in ("-c", "--compiler="):
-            d_compiler = arg
-        elif opt in ("-n", "--name="):
-            project_name = arg
-        elif opt in ("-s", "--source="):
-            project_source_dir = arg
-        elif opt in ("-p", "--prefix="):
-            prefix = arg
-
-def keyword_maker( doc_html_file ):
-    global keywords
-    html_content = []
-    with open( doc_html_file, "r" ) as in_html:
-        html_content = in_html.read()
-    mySoup          = BeautifulSoup( html_content )
-    dts             = mySoup.findAll( "dt" )
-    for dt in dts:
-        type_name = ""
-        decl_name = ""
-        if( dt.big is not None ):
-            if( isinstance( dt.big.contents[0], Tag) ):
-                type_name = dt.big.contents[0].text
-            else:
-                type_name = dt.big.contents[0]
-            if( dt.big.u is not None ):
-                decl_name =  dt.big.u.text
-                link_html = basename( doc_html_file, with_extention = True )
-                keywords.append( [type_name, decl_name, link_html ] ) # global burk
-
-if __name__ == "__main__":
-    # Parse command line
-    main( sys.argv[1:] )
-    if( project_name == "" or project_source_dir == ""):
-        usage()
-        exit(2)
-
+def main():
+    c = Container(**DEFAULTS)
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--author'    , help='Set author name')
+    parser.add_argument('-c', '--compiler'  , help='Set compiler, default: ldc2', dest='d_compiler')
+    parser.add_argument('-n', '--name'      , help='Set project name', required=True, dest='project_name')
+    parser.add_argument('-s', '--source'    , help='Set source dir to scan', required=True, dest='project_source_dir')
+    parser.add_argument('-p', '--prefix'    , help='Set prefix path for outputting devhelp book, default: /usr/share')
+    
+    parser.parse_args(namespace=c)
+        
     # Use initialized var for set file and dir
-    install_dir = os.path.join( prefix, "devhelp/books/", project_name )
-    index_html  = os.path.join( install_dir, "index.html" )
-    devhelp_file= os.path.join( install_dir, project_name + ".devhelp2" )
-    d_files     = finder( "/usr/include/d/std", ["d", "di"] )
-    # create dir if do no exist
-    if( not os.path.exists( install_dir ) ):
-        os.mkdir( install_dir )
-    with open( index_html, "w" ) as out_html,  open( devhelp_file, "w" ) as out_xml:
+    install_dir = os.path.join(c.prefix     , 'devhelp/books/', c.project_name )
+    index_html  = os.path.join(install_dir  , 'index.html' )
+    devhelp_file= os.path.join(install_dir  , c.project_name + '.devhelp2')
+    d_files     = finder(c.project_source_dir, ['.d', '.di'])
+    
+    if(not os.path.exists(install_dir)):
+        os.makedirs(install_dir)
+
+    keywords = []
+        
+    with open(index_html, 'w') as out_html, open(devhelp_file, 'w') as out_xml:
         # Add html header
-        out_html.write("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n")
-        out_html.write("\t<html>\n")
-        out_html.write("\t<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\n")
-        out_html.write("\t\t<title>"+ project_name +"</title>\n")
-        out_html.write("\t</meta>\n")
-        out_html.write("\t<body>\n")
+        out_html.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">\n')
+        out_html.write('\t<html>\n')
+        out_html.write('\t<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\n')
+        out_html.write('\t\t<title>'+ c.project_name +"</title>\n")
+        out_html.write('\t</meta>\n')
+        out_html.write('\t<body>\n')
         # Add xml header
-        out_xml.write("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n")
-        out_xml.write("<!DOCTYPE book PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"\">\n")
-        out_xml.write("<book xmlns=\"http://www.devhelp.net/book\" title=\"%s\" link=\"index.html\" author=\"%s\" name=\"%s\" version=\"2\" language=\"d\">\n" % (project_name, author, project_name) )
-        out_xml.write("\t<chapters>\n")
+        out_xml.write('<?xml version="1.0" encoding="utf-8" standalone="no"?>\n')
+        out_xml.write('<!DOCTYPE book PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">\n')
+        out_xml.write('<book xmlns="http://www.devhelp.net/book" title="%s" link="index.html" author="%s" name="%s" version="2" language="d">\n' % (c.project_name, c.author, c.project_name))
+        out_xml.write('\t<chapters>\n')
         # Create doc file from source and in same time complete index.html <project>.devhelp2 file
         for f in d_files:
             try:
-                dc = Popen( [ d_compiler, "-o-", f, "-Dd=" + install_dir ], stdout=PIPE, stderr=STDOUT )
+                dc = Popen( [ c.d_compiler, '-o-', f, "-Dd=" + install_dir ], stdout=PIPE, stderr=STDOUT )
                 dc.communicate()
             except Exception as e:
                 print e
             base_name = basename( f ) # take file name without his path and without extention
-            html_file = os.path.join( install_dir, base_name +".html" )
+            html_file = os.path.join( install_dir, base_name +'.html' )
             if( os.path.exists( html_file ) ):
-                out_html.write("\t\t<a href=\"" + base_name +".html\">" + base_name + "</a><br>\n")
-                out_xml.write("\t\t<sub name=\""+ base_name +"\" link=\""+ base_name + ".html\"/>\n")
-                keyword_maker( html_file )
+                out_html.write('\t\t<a href="' + base_name +'.html">' + base_name + '</a><br>\n')
+                out_xml.write('\t\t<sub name="'+ base_name +'" link="'+ base_name + '.html"/>\n')
+                keywords +=  keyword_maker(html_file)
         # Add html footer
-        out_html.write("\t</body>\n")
-        out_html.write("</html>\n")
+        out_html.write('\t</body>\n')
+        out_html.write('</html>\n')
         # Add xml footer
-        out_xml.write("\t</chapters>\n")
-        out_xml.write("\t<functions>\n")
+        out_xml.write('\t</chapters>\n')
+        out_xml.write('\t<functions>\n')
+        
         for item in keywords:
-            out_xml.write("\t\t<keyword type=\"%s\" name=\"%s\" link=\"%s\"/>\n" % ( item[0], item[1], item[2] ) )
-        out_xml.write("\t</functions>\n")
-        out_xml.write("</book>\n")
+            out_xml.write('\t\t<keyword type="%s" name="%s" link="%s"/>\n' % (item[0], item[1], item[2]))
+        
+        out_xml.write('\t</functions>\n')
+        out_xml.write('</book>\n')
+    
 
+def keyword_maker(doc_html_file):
+    keywords = []
+    html_content = []
+    with open( doc_html_file, 'r' ) as in_html:
+        html_content = in_html.read()
+    mySoup          = BeautifulSoup( html_content )
+    dts             = mySoup.findAll( 'dt' )
+    for dt in dts:
+        type_name = ''
+        decl_name = ''
+        if(dt.big is not None):
+            if(isinstance( dt.big.contents[0], Tag)):
+                type_name = dt.big.contents[0].text
+            else:
+                type_name = dt.big.contents[0]
+            if(dt.big.u is not None):
+                decl_name =  dt.big.u.text
+                link_html = basename(doc_html_file, True)
+                keywords.append([type_name, decl_name, link_html])
+    
+    return keywords
+
+if __name__ == '__main__':
+    main()
