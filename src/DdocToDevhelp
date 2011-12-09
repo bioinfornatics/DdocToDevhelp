@@ -40,7 +40,7 @@ def basename( file_path , with_extention = False):
     else:
         result = ".".join( file_path.split( os.sep )[-1].split( "." )[0:-1] )
     return result
-    
+
 def finder( directory = "/", extentions = [] ):
     file_list  = []
     for dirname, dirnames, filenames in os.walk( directory ):
@@ -51,7 +51,7 @@ def finder( directory = "/", extentions = [] ):
     return tuple( file_list )
 
 def usage():
-    print 'Usage: DdocToDevhelp [ -a -c -p] -n <Project Name> -s <Source dir>
+    print "Usage: DdocToDevhelp [ -a -c -p] -n <Project Name> -s <Source dir>"
     print "-h --help                        Display this message"
     print "-a --name=<author name>          Set author name"
     print "-c --compiler=<compiler name>    Set compiler default: ldc2"
@@ -66,11 +66,11 @@ def main(argv):
     global project_source_dir
     global prefix
     try:
-        opts, args = getopt.getopt(argv, "ha:c:n:s:p", ["help", "--author=", "--compiler=", "name=", "source=", "prefix="])
+        opts, args = getopt.getopt(argv, "ha:c:n:s:p:", ["help", "--author=", "--compiler=", "name=", "source=", "prefix="])
     except getopt.GetoptError:
         usage()
-        sys.exit(2)       
-        
+        sys.exit(2)
+
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage()
@@ -85,7 +85,7 @@ def main(argv):
             project_source_dir = arg
         elif opt in ("-p", "--prefix="):
             prefix = arg
-  
+
 def keyword_maker( doc_html_file ):
     global keywords
     html_content = []
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     if( project_name == "" or project_source_dir == ""):
         usage()
         exit(2)
-    
+
     # Use initialized var for set file and dir
     install_dir = os.path.join( prefix, "devhelp/books/", project_name )
     index_html  = os.path.join( install_dir, "index.html" )
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         for f in d_files:
             try:
                 dc = Popen( [ d_compiler, "-o-", f, "-Dd=" + install_dir ], stdout=PIPE, stderr=STDOUT )
-                dc.communicate()                
+                dc.communicate()
             except Exception as e:
                 print e
             base_name = basename( f ) # take file name without his path and without extention
@@ -157,4 +157,4 @@ if __name__ == "__main__":
             out_xml.write("\t\t<keyword type=\"%s\" name=\"%s\" link=\"%s\"/>\n" % ( item[0], item[1], item[2] ) )
         out_xml.write("\t</functions>\n")
         out_xml.write("</book>\n")
-    
+
