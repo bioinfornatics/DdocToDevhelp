@@ -92,8 +92,11 @@ def main():
         # Create doc file from source and in same time complete index.html <project>.devhelp2 file
         for f in d_files:
             try:
-                dc = Popen( [ c.d_compiler, '-o-', f, "-Dd=" + install_dir ], stdout=PIPE, stderr=STDOUT )
-                dc.communicate()
+                dc = Popen( args=[ '-o-', f, "-I" + c.project_source_dir, "-c", "-Dd=" + install_dir ], executable=c.d_compiler, stdout=PIPE, stderr=STDOUT )
+                outputlines = dc.stdout.readlines()
+                dc.wait()
+                for output in outputlines:
+                    if output != "":    print output
             except Exception as e:
                 print e
             base_name = basename( f ) # take file name without his path and without extention
