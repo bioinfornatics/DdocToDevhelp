@@ -36,9 +36,9 @@ keywords            = []
 def basename( file_path , with_extention = False):
     result = ""
     if( with_extention ):
-        result = "".join( file_path.split( os.sep )[-1] )
+        result = os.path.split(file_path)[1]
     else:
-        result = ".".join( file_path.split( os.sep )[-1].split( "." )[0:-1] )
+        result = os.path.split(file_path)[1].rsplit('.', 1)[0]
     return result
 
 def finder( directory = "/", extentions = [] ):
