@@ -1,0 +1,4 @@
+Example of use:
+
+./DdocToDevhelp -n Phobos -s /usr/include/d/std/ -p $HOME
+./DdocToDevhelp -n Derelict -s /usr/include/d/derelict

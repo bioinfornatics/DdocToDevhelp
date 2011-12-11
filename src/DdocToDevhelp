@@ -40,6 +40,7 @@ class Container(object):
 
 
 def basename(file_path, with_extension=False):
+    if( file_path[-1] == os.sep ): file_path = file_path[0:-1]
     r = os.path.split(file_path)[1]
     return r if with_extension else r.rsplit('.', 1)[0]
 
@@ -55,27 +56,27 @@ def finder( directory = '/', extentions = [] ):
 
 def main():
     c = Container(**DEFAULTS)
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--author'    , help='Set author name')
     parser.add_argument('-c', '--compiler'  , help='Set compiler, default: ldc2', dest='d_compiler')
     parser.add_argument('-n', '--name'      , help='Set project name', required=True, dest='project_name')
     parser.add_argument('-s', '--source'    , help='Set source dir to scan', required=True, dest='project_source_dir')
     parser.add_argument('-p', '--prefix'    , help='Set prefix path for outputting devhelp book, default: /usr/share')
-    
+
     parser.parse_args(namespace=c)
-        
+
     # Use initialized var for set file and dir
     install_dir = os.path.join(c.prefix     , 'devhelp/books/', c.project_name )
     index_html  = os.path.join(install_dir  , 'index.html' )
     devhelp_file= os.path.join(install_dir  , c.project_name + '.devhelp2')
     d_files     = finder(c.project_source_dir, ['.d', '.di'])
-    
+
     if(not os.path.exists(install_dir)):
         os.makedirs(install_dir)
 
     keywords = []
-        
+
     with open(index_html, 'w') as out_html, open(devhelp_file, 'w') as out_xml:
         # Add html header
         out_html.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">\n')
@@ -92,18 +93,22 @@ def main():
         # Create doc file from source and in same time complete index.html <project>.devhelp2 file
         for f in d_files:
             try:
-                dc = Popen( args=[ '-o-', f, "-I" + c.project_source_dir, "-c", "-Dd=" + install_dir ], executable=c.d_compiler, stdout=PIPE, stderr=STDOUT )
+                dc = Popen( args=[ '-o-', "-I'" + c.project_source_dir + "'", "-d", "-c", f, "-Dd=" + install_dir  +""], executable=c.d_compiler, stdout=PIPE, stderr=STDOUT )
                 outputlines = dc.stdout.readlines()
                 dc.wait()
                 for output in outputlines:
                     if output != "":    print output
             except Exception as e:
                 print e
-            base_name = basename( f ) # take file name without his path and without extention
-            html_file = os.path.join( install_dir, base_name +'.html' )
-            if( os.path.exists( html_file ) ):
-                out_html.write('\t\t<a href="' + base_name +'.html">' + base_name + '</a><br>\n')
-                out_xml.write('\t\t<sub name="'+ base_name +'" link="'+ base_name + '.html"/>\n')
+            base_dir            = basename( c.project_source_dir )
+            base_name           = basename( f ) # take file name without his path and without extention
+            temp_name           = "_".join( f[f.find( base_dir ):f.find(base_name)].split(os.sep) ) + base_name +'.html'  # strip name
+            generated_html_file = os.path.join( install_dir, base_name +'.html')
+            html_file           = os.path.join( install_dir, temp_name  )
+            if( os.path.exists( generated_html_file ) ):
+                os.rename( generated_html_file, html_file )
+                out_html.write('\t\t<a href="' + temp_name +'">' + temp_name + '</a><br>\n')
+                out_xml.write('\t\t<sub name="'+ temp_name +'" link="'+ temp_name + '"/>\n')
                 keywords +=  keyword_maker(html_file)
         # Add html footer
         out_html.write('\t</body>\n')
@@ -111,13 +116,13 @@ def main():
         # Add xml footer
         out_xml.write('\t</chapters>\n')
         out_xml.write('\t<functions>\n')
-        
+
         for item in keywords:
             out_xml.write('\t\t<keyword type="%s" name="%s" link="%s"/>\n' % (item[0], item[1], item[2]))
-        
+
         out_xml.write('\t</functions>\n')
         out_xml.write('</book>\n')
-    
+
 
 def keyword_maker(doc_html_file):
     keywords = []
@@ -138,7 +143,7 @@ def keyword_maker(doc_html_file):
                 decl_name =  dt.big.u.text
                 link_html = basename(doc_html_file, True)
                 keywords.append([type_name, decl_name, link_html])
-    
+
     return keywords
 
 if __name__ == '__main__':
