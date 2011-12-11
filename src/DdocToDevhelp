@@ -92,6 +92,7 @@ def main():
         out_xml.write('\t<chapters>\n')
         # Create doc file from source and in same time complete index.html <project>.devhelp2 file
         for f in d_files:
+            f = os.path.normpath( f )
             try:
                 dc = Popen( args=[ '-o-', "-I'" + c.project_source_dir + "'", "-d", "-c", f, "-Dd=" + install_dir  +""], executable=c.d_compiler, stdout=PIPE, stderr=STDOUT )
                 outputlines = dc.stdout.readlines()
