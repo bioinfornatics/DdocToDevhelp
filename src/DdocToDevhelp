@@ -67,9 +67,9 @@ def main():
     parser.parse_args(namespace=c)
 
     # Use initialized var for set file and dir
-    install_dir = os.path.join(c.prefix     , 'devhelp/books/', c.project_name )
-    index_html  = os.path.join(install_dir  , 'index.html' )
-    devhelp_file= os.path.join(install_dir  , c.project_name + '.devhelp2')
+    install_dir = os.path.normpath( os.path.join(c.prefix     , 'devhelp/books/', c.project_name ) )
+    index_html  = os.path.normpath( os.path.join(install_dir  , 'index.html' ) )
+    devhelp_file= os.path.normpath( os.path.join(install_dir  , c.project_name + '.devhelp2') )
     d_files     = finder(c.project_source_dir, ['.d', '.di'])
 
     if(not os.path.exists(install_dir)):
@@ -102,8 +102,9 @@ def main():
             except Exception as e:
                 print e
             base_dir            = basename( c.project_source_dir )
-            base_name           = basename( f ) # take file name without his path and without extention
-            temp_name           = "_".join( f[f.find( base_dir ):f.find(base_name)].split(os.sep) ) + base_name +'.html'  # strip name
+            base_name           = basename( f ) # take file name without his path and without extention4
+            temp                = f[ len(c.project_source_dir ) : ]
+            temp_name           = "_".join( temp[temp.find( base_dir ): temp.find(base_name)].split(os.sep) ) + base_name +'.html'  # strip name
             generated_html_file = os.path.join( install_dir, base_name +'.html')
             html_file           = os.path.join( install_dir, temp_name  )
             if( os.path.exists( generated_html_file ) ):
