@@ -1,4 +1,45 @@
 Example of use:
 
-./DdocToDevhelp -n Phobos -s /usr/include/d/std/ -p $HOME
-./DdocToDevhelp -n Derelict -s /usr/include/d/derelict
+-----------------
+    Phobos
+-----------------
+./DdocToDevhelp -n Phobos -s /usr/include/d/std/ -p /usr/share/
+
+
+-----------------
+    Derelict
+-----------------
+./DdocToDevhelp -n DerelictAL        -s DerelictAL/derelict       -p /usr/share/ -i DerelictUtil -i DerelictAL
+./DdocToDevhelp -n DerelictAllegro   -s DerelictAllegro/derelict  -p /usr/share/ -i DerelictUtil -i DerelictAllegro
+./DdocToDevhelp -n DerelictFMOD      -s DerelictFMOD/derelict     -p /usr/share/ -i DerelictUtil -i DerelictFMOD
+./DdocToDevhelp -n DerelictFT        -s DerelictFT/derelict       -p /usr/share/ -i DerelictUtil -i DerelictFT
+./DdocToDevhelp -n DerelictGL        -s DerelictGL/derelict       -p /usr/share/ -i DerelictUtil -i DerelictGL
+./DdocToDevhelp -n DerelictIL        -s DerelictIL/derelict       -p /usr/share/ -i DerelictUtil -i DerelictIL
+./DdocToDevhelp -n DerelictODE       -s DerelictODE/derelict      -p /usr/share/ -i DerelictUtil -i DerelictODE
+./DdocToDevhelp -n DerelictOgg       -s DerelictOgg/derelict      -p /usr/share/ -i DerelictUtil -i DerelictOgg
+./DdocToDevhelp -n DerelictPA        -s DerelictPA/derelict       -p /usr/share/ -i DerelictUtil -i DerelictPA
+./DdocToDevhelp -n DerelictSDL       -s DerelictSDL/derelict      -p /usr/share/ -i DerelictUtil -i DerelictSDL
+./DdocToDevhelp -n DerelictSFML      -s DerelictSFML/derelict     -p /usr/share/ -i DerelictUtil -i DerelictSFML
+./DdocToDevhelp -n DerelictUtil      -s DerelictUtil/derelict     -p /usr/share/ -i DerelictUtil
+
+-----------------
+    GTKD
+-----------------
+./DdocToDevhelp -n atk       -s src/atk          -p /usr/share/ -i src
+./DdocToDevhelp -n cairo     -s src/cairo        -p /usr/share/ -i src
+./DdocToDevhelp -n gdk       -s src/gdk          -p /usr/share/ -i src
+./DdocToDevhelp -n gdkpixbuf -s src/gdkpixbuf    -p /usr/share/ -i src
+./DdocToDevhelp -n gio       -s src/gio          -p /usr/share/ -i src
+./DdocToDevhelp -n glade     -s src/glade        -p /usr/share/ -i src
+./DdocToDevhelp -n glib      -s src/glib         -p /usr/share/ -i src
+./DdocToDevhelp -n gobject   -s src/gobject      -p /usr/share/ -i src
+./DdocToDevhelp -n gthread   -s src/gthread      -p /usr/share/ -i src
+./DdocToDevhelp -n gtk       -s src/gtk          -p /usr/share/ -i src
+./DdocToDevhelp -n gtkc      -s src/gtkc         -p /usr/share/ -i src
+./DdocToDevhelp -n gtkglc    -s src/gtkglc       -p /usr/share/ -i src
+./DdocToDevhelp -n pango     -s src/pango        -p /usr/share/ -i src
+./DdocToDevhelp -n glgdk     -s srcgl/glgdk      -p /usr/share/ -i src -i srcgl -i srcsv
+./DdocToDevhelp -n glgtk     -s srcgl/glgtk      -p /usr/share/ -i src -i srcgl -i srcsv
+./DdocToDevhelp -n gtkglc    -s srcgl/gtkglc     -p /usr/share/ -i src -i srcgl -i srcsv
+./DdocToDevhelp -n gsv       -s srcsv/gsv        -p /usr/share/ -i src -i srcsv -i srcsv
+./DdocToDevhelp -n gsvc      -s srcsv/gsvc       -p /usr/share/ -i src -i srcsv -i srcsv
