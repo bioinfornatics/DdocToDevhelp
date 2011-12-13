@@ -20,16 +20,17 @@ from subprocess import Popen, PIPE, STDOUT
 from BeautifulSoup import BeautifulSoup, Tag
 
 
-DEFAULTS = dict(project_name        = '',
-                project_source_dir  = '',
+DEFAULTS = dict(project             = '',
+                source              = '',
                 author              = '',
-                prefix              = '/usr/share', # could be ~/.local/share
+                prefix              = '/usr/share',
                 install_dir         = '',
+                imports             = [],
                 name                = '',
                 keywords_content    = '',
                 index_html          = '',
                 devhelp_file        = '',
-                d_compiler          = 'ldc2',
+                compiler            = 'ldc2',
                 d_files             = ()
                )
 
@@ -58,19 +59,21 @@ def main():
     c = Container(**DEFAULTS)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-a', '--author'    , help='Set author name')
-    parser.add_argument('-c', '--compiler'  , help='Set compiler, default: ldc2', dest='d_compiler')
-    parser.add_argument('-n', '--name'      , help='Set project name', required=True, dest='project_name')
-    parser.add_argument('-s', '--source'    , help='Set source dir to scan', required=True, dest='project_source_dir')
-    parser.add_argument('-p', '--prefix'    , help='Set prefix path for outputting devhelp book, default: /usr/share')
+    parser.add_argument('-a', '--author'    , action='store'  , help='Set author name'                              )
+    parser.add_argument('-c', '--compiler'  , action='store'  , help='Set compiler, default: ldc2'                  )
+    parser.add_argument('-p', '--prefix'    , action='store'  , help='Set prefix path for outputting devhelp book'  )
+    parser.add_argument('-i', '--imports'   , action='append' , help='Set import dir'                               )
+    parser.add_argument('-n', '--name'      , action='store'  , help='Set project name'           , required=True   )
+    parser.add_argument('-s', '--source'    , action='store'  , help='Set source dir to scan'     , required=True   )
+
 
     parser.parse_args(namespace=c)
 
     # Use initialized var for set file and dir
-    install_dir = os.path.normpath( os.path.join(c.prefix     , 'devhelp/books/', c.project_name ) )
+    install_dir = os.path.normpath( os.path.join(c.prefix     , 'devhelp/books/', c.project ) )
     index_html  = os.path.normpath( os.path.join(install_dir  , 'index.html' ) )
-    devhelp_file= os.path.normpath( os.path.join(install_dir  , c.project_name + '.devhelp2') )
-    d_files     = finder(c.project_source_dir, ['.d', '.di'])
+    devhelp_file= os.path.normpath( os.path.join(install_dir  , c.project + '.devhelp2') )
+    d_files     = finder(c.source, ['.d', '.di'])
 
     if(not os.path.exists(install_dir)):
         os.makedirs(install_dir)
@@ -82,29 +85,32 @@ def main():
         out_html.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">\n')
         out_html.write('\t<html>\n')
         out_html.write('\t<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\n')
-        out_html.write('\t\t<title>'+ c.project_name +"</title>\n")
+        out_html.write('\t\t<title>'+ c.project +"</title>\n")
         out_html.write('\t</meta>\n')
         out_html.write('\t<body>\n')
         # Add xml header
         out_xml.write('<?xml version="1.0" encoding="utf-8" standalone="no"?>\n')
         out_xml.write('<!DOCTYPE book PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">\n')
-        out_xml.write('<book xmlns="http://www.devhelp.net/book" title="%s" link="index.html" author="%s" name="%s" version="2" language="d">\n' % (c.project_name, c.author, c.project_name))
+        out_xml.write('<book xmlns="http://www.devhelp.net/book" title="%s" link="index.html" author="%s" name="%s" version="2" language="d">\n' % (c.project, c.author, c.project))
         out_xml.write('\t<chapters>\n')
         # Create doc file from source and in same time complete index.html <project>.devhelp2 file
         for f in d_files:
             f = os.path.normpath( f )
             try:
-                dc = Popen( args=[ '-o-', "-I'" + c.project_source_dir + "'", "-d", "-c", f, "-Dd=" + install_dir  +""], executable=c.d_compiler, stdout=PIPE, stderr=STDOUT )
+                imports     = [ "-I%s" % i for i in c.imports if i != ""]
+                arguments   = [c.compiler] + imports + ['-o-', '-d', '-c', f, '-Dd' + install_dir ]
+                dc          = Popen( arguments, stdout=PIPE, stderr=STDOUT )
                 outputlines = dc.stdout.readlines()
                 dc.wait()
                 for output in outputlines:
-                    if output != "":    print output
+                    if output != "":
+                        print output
             except Exception as e:
                 print e
-            base_dir            = basename( c.project_source_dir )
+            base_dir            = basename( c.source )
             base_name           = basename( f ) # take file name without his path and without extention4
-            temp                = f[ len(c.project_source_dir ) : ]
-            temp_name           = "_".join( temp[temp.find( base_dir ): temp.find(base_name)].split(os.sep) ) + base_name +'.html'  # strip name
+            #~ temp                = f[ len(c.source ) : ]
+            temp_name           = "_".join( f[f.find( base_dir ): f.find(base_name)].split(os.sep) ) + base_name +'.html'  # strip name
             generated_html_file = os.path.join( install_dir, base_name +'.html')
             html_file           = os.path.join( install_dir, temp_name  )
             if( os.path.exists( generated_html_file ) ):
