@@ -20,8 +20,7 @@ from subprocess import Popen, PIPE, STDOUT
 from BeautifulSoup import BeautifulSoup, Tag
 
 
-DEFAULTS = dict(project             = '',
-                source              = '',
+DEFAULTS = dict(source              = '',
                 author              = '',
                 prefix              = '/usr/share',
                 install_dir         = '',
@@ -63,16 +62,16 @@ def main():
     parser.add_argument('-c', '--compiler'  , action='store'  , help='Set compiler, default: ldc2'                  )
     parser.add_argument('-p', '--prefix'    , action='store'  , help='Set prefix path for outputting devhelp book'  )
     parser.add_argument('-i', '--imports'   , action='append' , help='Set import dir'                               )
-    parser.add_argument('-n', '--name'      , action='store'  , help='Set project name'           , required=True   )
+    parser.add_argument('-n', '--name'      , action='store'  , help='Set name name'           , required=True   )
     parser.add_argument('-s', '--source'    , action='store'  , help='Set source dir to scan'     , required=True   )
 
 
     parser.parse_args(namespace=c)
 
     # Use initialized var for set file and dir
-    install_dir = os.path.normpath( os.path.join(c.prefix     , 'devhelp/books/', c.project ) )
+    install_dir = os.path.normpath( os.path.join(c.prefix     , 'devhelp/books/', c.name ) )
     index_html  = os.path.normpath( os.path.join(install_dir  , 'index.html' ) )
-    devhelp_file= os.path.normpath( os.path.join(install_dir  , c.project + '.devhelp2') )
+    devhelp_file= os.path.normpath( os.path.join(install_dir  , c.name + '.devhelp2') )
     d_files     = finder(c.source, ['.d', '.di'])
 
     if(not os.path.exists(install_dir)):
@@ -85,15 +84,15 @@ def main():
         out_html.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">\n')
         out_html.write('\t<html>\n')
         out_html.write('\t<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\n')
-        out_html.write('\t\t<title>'+ c.project +"</title>\n")
+        out_html.write('\t\t<title>'+ c.name +"</title>\n")
         out_html.write('\t</meta>\n')
         out_html.write('\t<body>\n')
         # Add xml header
         out_xml.write('<?xml version="1.0" encoding="utf-8" standalone="no"?>\n')
         out_xml.write('<!DOCTYPE book PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">\n')
-        out_xml.write('<book xmlns="http://www.devhelp.net/book" title="%s" link="index.html" author="%s" name="%s" version="2" language="d">\n' % (c.project, c.author, c.project))
+        out_xml.write('<book xmlns="http://www.devhelp.net/book" title="%s" link="index.html" author="%s" name="%s" version="2" language="d">\n' % (c.name, c.author, c.name))
         out_xml.write('\t<chapters>\n')
-        # Create doc file from source and in same time complete index.html <project>.devhelp2 file
+        # Create doc file from source and in same time complete index.html <name>.devhelp2 file
         for f in d_files:
             f = os.path.normpath( f )
             try:
