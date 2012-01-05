@@ -62,8 +62,8 @@ def main():
     parser.add_argument('-c', '--compiler'  , action='store'  , help='Set compiler, default: ldc2'                  )
     parser.add_argument('-p', '--prefix'    , action='store'  , help='Set prefix path for outputting devhelp book'  )
     parser.add_argument('-i', '--imports'   , action='append' , help='Set import dir'                               )
-    parser.add_argument('-n', '--name'      , action='store'  , help='Set name name'           , required=True   )
-    parser.add_argument('-s', '--source'    , action='store'  , help='Set source dir to scan'     , required=True   )
+    parser.add_argument('-n', '--name'      , action='store'  , help='Set name name'                , required=True )
+    parser.add_argument('-s', '--source'    , action='store'  , help='Set source dir to scan'       , required=True )
 
 
     parser.parse_args(namespace=c)
@@ -107,8 +107,7 @@ def main():
             except Exception as e:
                 print e
             base_dir            = basename( c.source )
-            base_name           = basename( f ) # take file name without his path and without extention4
-            #~ temp                = f[ len(c.source ) : ]
+            base_name           = basename( f ) # take file name without his path and without extention
             temp_name           = "_".join( f[f.find( base_dir ): f.find(base_name)].split(os.sep) ) + base_name +'.html'  # strip name
             generated_html_file = os.path.join( install_dir, base_name +'.html')
             html_file           = os.path.join( install_dir, temp_name  )
