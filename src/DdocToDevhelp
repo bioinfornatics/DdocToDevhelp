@@ -51,7 +51,7 @@ def finder( directory = '/', extentions = [] ):
             f = os.path.join(dirname, filename)
             if os.path.splitext(f)[1] in extentions:
                 file_list.append(f)
-    return file_list
+    return sorted(file_list)
 
 
 def main():
@@ -73,6 +73,7 @@ def main():
     index_html  = os.path.normpath( os.path.join(install_dir  , 'index.html' ) )
     devhelp_file= os.path.normpath( os.path.join(install_dir  , c.name + '.devhelp2') )
     d_files     = finder(c.source, ['.d', '.di'])
+    c.source    = os.path.normpath( c.source )
 
     if(not os.path.exists(install_dir)):
         os.makedirs(install_dir)
@@ -108,7 +109,8 @@ def main():
                 print e
             base_dir            = basename( c.source )
             base_name           = basename( f ) # take file name without his path and without extention
-            temp_name           = "_".join( f[f.find( base_dir ): f.find(base_name)].split(os.sep) ) + base_name +'.html'  # strip name
+            start               = len( c.source ) - len( base_dir )
+            temp_name           = "_".join( f[start: f.find(base_name)].split(os.sep) ) + base_name +'.html'  # strip name
             generated_html_file = os.path.join( install_dir, base_name +'.html')
             html_file           = os.path.join( install_dir, temp_name  )
             if( os.path.exists( generated_html_file ) ):
@@ -154,3 +156,4 @@ def keyword_maker(doc_html_file):
 
 if __name__ == '__main__':
     main()
+
